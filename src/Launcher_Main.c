@@ -3,8 +3,9 @@
 //
 // FILE:   Launcher_Main.c
 // TARGET: TMS320F280049C (LAUNCHXL-F280049C)
-// LANGUAGE: C (TI 21.6.0.LTS)
-// DEBUGGER: XDS110
+// LANGUAGE: C
+// COMPILER: TI 21.6.0.LTS
+// DEBUGGER: XDS110(On-board-USB-Debugger)
 //#############################################################################
 #include "driverlib.h"
 #include "device.h"
