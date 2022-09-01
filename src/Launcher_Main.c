@@ -6,6 +6,7 @@
 // LANGUAGE: C
 // COMPILER: TI 21.6.0.LTS
 // DEBUGGER: XDS110(On-board-USB-Debugger)
+// REFERENCES: C2000Ware_3_04_00_00
 //#############################################################################
 #include "driverlib.h"
 #include "device.h"
