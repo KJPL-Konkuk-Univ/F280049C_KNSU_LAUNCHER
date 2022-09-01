@@ -23,6 +23,8 @@ extern uint16_t RamfuncsRunStart;
 
 // Globals, for large data.
 uint16_t counter = 0;
+uint16_t sData[16];
+uint16_t rData[16];
 unsigned char *msg;
 unsigned char data[16];
 
