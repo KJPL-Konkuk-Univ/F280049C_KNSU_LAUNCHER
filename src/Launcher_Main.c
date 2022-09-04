@@ -6,13 +6,13 @@
 // LANGUAGE: C
 // COMPILER: TI 21.6.0.LTS
 // DEBUGGER: XDS110(On-board-USB-Debugger)
-// REFERENCES: C2000Ware_3_04_00_00
+// REFERENCE: C2000Ware_3_04_00_00
 //#############################################################################
 #include "driverlib.h"
 #include "device.h"
 
 #ifdef _FLASH
-// These are defined by the linker (see device linker command file)
+// These are defined by the linker
 extern uint16_t RamfuncsLoadStart;
 extern uint16_t RamfuncsLoadSize;
 extern uint16_t RamfuncsRunStart;
@@ -21,11 +21,15 @@ extern uint16_t RamfuncsRunStart;
 //Defines
 #define AUTOBAUD 0
 #define RESTRICTED_REGS 0
+#define USE_TX_INTERRUPT 0
 
-// Globals, for large data.
-uint16_t counter = 0;
-uint16_t sData[16];
-uint16_t rData[16];
+/***************************************************************************************
+* Globals, for large data (Do not use malloc)
+* Read stdint.h.In TMS320C2000, uin16_t is unsigned int.
+***************************************************************************************/
+uint16_t counter = 0; //unsigned int.
+volatile uint16_t sData[16];
+volatile uint16_t rData[16];
 unsigned char *msg;
 unsigned char data[16];
 
@@ -33,10 +37,12 @@ unsigned char data[16];
 // Function Prototypes
 
 //for setup
-void PinMux_setup(void);
+
 
 //Interrupt Service Routine
+#if USE_TX_INTERRUPT
 __interrupt void sciaTxISR(void);
+#endif
 __interrupt void sciaRxISR(void);
 
 
@@ -45,7 +51,7 @@ void main(void)
     // Configure Device.
     Device_init();
     Device_initGPIO();
-    PinMux_setup();
+    PinMux_setup_SCI();
 
 #if RESTRICTED_REGS
     EALLOW;
@@ -62,7 +68,9 @@ void main(void)
     IFR = 0x0000;
 
     // Map the ISR to the wake interrupt.
+#if USE_TX_INTERRUPT
     Interrupt_register(INT_SCIA_TX, sciaTxISR);
+#endif
     Interrupt_register(INT_SCIA_RX, sciaRxISR);
 
     // Initialize SCIA and its FIFO.
@@ -105,7 +113,7 @@ void main(void)
 
     // Enable the interrupts in the PIE: Group 9 interrupts 1 & 2.
     Interrupt_enable(INT_SCIA_RX);
-    Interrupt_enable(INT_SCIA_TX);
+//    Interrupt_enable(INT_SCIA_TX);
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
     // Enable global interrupts.
@@ -116,10 +124,12 @@ void main(void)
     }
 }
 
+
+#if USE_TX_INTERRUPT
 /*******************************************************************
 * sciaTxISR - Disable the TXRDY interrupt and print message asking
 *             for a character.
-******************************************8************************/
+*******************************************************************/
 __interrupt void sciaTxISR(void) {
     // Disable the TXRDY interrupt.
     SCI_disableInterrupt(SCIA_BASE, SCI_INT_TXRDY);
@@ -130,10 +140,10 @@ __interrupt void sciaTxISR(void) {
     // Ackowledge the PIE interrupt.
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 }
+#endif
 
-/*******************************************************************
-* sciaRxISR - Read the character from the RXBUF and echo it back.
-*******************************************************************/
+
+//sciaRxISR - Read the character from the RXBUF.
 __interrupt void sciaRxISR(void) {
     uint16_t receivedChar;
 
@@ -144,29 +154,12 @@ __interrupt void sciaRxISR(void) {
     receivedChar = SCI_readCharBlockingNonFIFO(SCIA_BASE);
 
     // Echo back the character.
-    msg = "  You sent: \0";
-    SCI_writeCharArray(SCIA_BASE, (uint16_t*)data, 16);
-//    SCI_writeCharBlockingNonFIFO(SCIA_BASE, receivedChar);
+//    msg = "  You sent: \0";
+//    SCI_writeCharArray(SCIA_BASE, (uint16_t*)data, 16);
+    SCI_writeCharBlockingNonFIFO(SCIA_BASE, receivedChar);
 
     // Acknowledge the PIE interrupt.
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
     counter++;
-}
-
-void PinMux_setup(void) {
-    //setup PINMUX - READ TRM
-    // GPIO28 - SCI Rx pin, Pin3
-    GPIO_setMasterCore(DEVICE_GPIO_PIN_SCIRXDA, GPIO_CORE_CPU1);
-    GPIO_setPinConfig(DEVICE_GPIO_CFG_SCIRXDA);
-    GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCIRXDA, GPIO_DIR_MODE_IN);
-    GPIO_setPadConfig(DEVICE_GPIO_PIN_SCIRXDA, GPIO_PIN_TYPE_STD);
-    GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCIRXDA, GPIO_QUAL_ASYNC);
-
-    // GPIO29 - SCI(UART) Tx pin, Pin2
-    GPIO_setMasterCore(DEVICE_GPIO_PIN_SCITXDA, GPIO_CORE_CPU1);
-    GPIO_setPinConfig(DEVICE_GPIO_CFG_SCITXDA);
-    GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_DIR_MODE_OUT);
-    GPIO_setPadConfig(DEVICE_GPIO_PIN_SCITXDA, GPIO_PIN_TYPE_STD);
-    GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_QUAL_ASYNC);
 }

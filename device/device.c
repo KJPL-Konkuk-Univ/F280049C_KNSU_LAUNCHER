@@ -259,3 +259,25 @@ void __error__(char *filename, uint32_t line)
     //
     ESTOP0;
 }
+
+//*****************************************************************************
+//
+// Setup PinMux SCI(UART)
+//
+//*****************************************************************************
+void PinMux_setup_SCI(void) {
+    //setup PINMUX - READ TRM
+    // GPIO28 - SCI Rx pin, Pin3
+    GPIO_setMasterCore(DEVICE_GPIO_PIN_SCIRXDA, GPIO_CORE_CPU1);
+    GPIO_setPinConfig(DEVICE_GPIO_CFG_SCIRXDA);
+    GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCIRXDA, GPIO_DIR_MODE_IN);
+    GPIO_setPadConfig(DEVICE_GPIO_PIN_SCIRXDA, GPIO_PIN_TYPE_STD);
+    GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCIRXDA, GPIO_QUAL_ASYNC);
+
+    // GPIO29 - SCI(UART) Tx pin, Pin2
+    GPIO_setMasterCore(DEVICE_GPIO_PIN_SCITXDA, GPIO_CORE_CPU1);
+    GPIO_setPinConfig(DEVICE_GPIO_CFG_SCITXDA);
+    GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_DIR_MODE_OUT);
+    GPIO_setPadConfig(DEVICE_GPIO_PIN_SCITXDA, GPIO_PIN_TYPE_STD);
+    GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_QUAL_ASYNC);
+}
