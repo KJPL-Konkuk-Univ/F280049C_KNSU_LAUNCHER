@@ -1,0 +1,1 @@
+"./device/device.obj" "./device/f28004x_codestartbranch.obj" "./src/Launcher_Main.obj" "./src/protocols.obj" "C:/ti/c2000/C2000Ware_3_04_00_00/driverlib/f28004x/driverlib/ccs/Debug/driverlib.lib" "../cmd/28004x_generic_flash_lnk.cmd" -llibc.a 
