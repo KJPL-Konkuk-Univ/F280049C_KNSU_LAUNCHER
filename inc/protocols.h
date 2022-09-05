@@ -8,7 +8,10 @@
 #ifndef INC_PROTOCOLS_H_
 #define INC_PROTOCOLS_H_
 
-void SendDataSCI(uint16_t base, uint16_t * TrsData, uint16_t size);
+
+
+void SendDataSCI(uint32_t SelSCI, uint16_t * TrsData, SCI_TxFIFOLevel size);
+void RcvCmdData(uint32_t SelSCI, uint16_t * RcvData, SCI_RxFIFOLevel size);
 
 
 #endif /* INC_PROTOCOLS_H_ */
