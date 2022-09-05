@@ -11,6 +11,8 @@
 #include "driverlib.h"
 #include "device.h"
 
+#include "inc/protocols.h"
+
 #ifdef _FLASH
 // These are defined by the linker
 extern uint16_t RamfuncsLoadStart;
@@ -28,7 +30,7 @@ extern uint16_t RamfuncsRunStart;
 * Read stdint.h.In TMS320C2000, uin16_t is unsigned int.
 ***************************************************************************************/
 uint16_t counter = 0; //unsigned int.
-volatile uint16_t sData[16];
+volatile uint16_t * sData[16];
 volatile uint16_t rData[16];
 unsigned char *msg;
 unsigned char data[16];
@@ -121,6 +123,7 @@ void main(void)
     EINT;
 
     for(;;) {
+        SendDataSCI(SCIA_BASE, sData, sizeof(sData));
 
     }
 }
