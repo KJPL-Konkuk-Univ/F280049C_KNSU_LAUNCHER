@@ -52,6 +52,7 @@ void main(void)
     Device_init();
     Device_initGPIO();
     PinMux_setup_SCI();
+    PinMux_setup_GPIO();
 
 #if RESTRICTED_REGS
     EALLOW;
