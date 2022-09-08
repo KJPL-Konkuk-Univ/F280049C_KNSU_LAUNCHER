@@ -35,8 +35,9 @@ volatile uint16_t rData[16];
 unsigned char *msg;
 unsigned char data[16];
 
-uint16_t RxReadyFlag = 0;
-uint16_t RxCopyCount = 0;
+extern uint16_t RxReadyFlag;
+extern uint16_t RxCopyCount;
+
 uint16_t receivedChar[16];
 
 // Function Prototypes
@@ -110,8 +111,8 @@ void main(void)
 #endif
 
     // Send starting message.
-    msg = "\r\nRest\n\0";
-    SCI_writeCharArray(SCIA_BASE, (uint16_t*)msg, 8);
+    msg = "\r\nKJPL_Launcher\n\0";
+    SCI_writeCharArray(SCIA_BASE, (uint16_t*)msg, 17);
 
     // Clear the SCI interrupts before enabling them.
     SCI_clearInterruptStatus(SCIA_BASE, SCI_INT_TXFF | SCI_INT_RXFF);

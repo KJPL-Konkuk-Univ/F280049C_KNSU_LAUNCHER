@@ -9,8 +9,8 @@
 #include "driverlib.h"
 #include "device.h"
 
-extern uint16_t RxReadyFlag;
-extern uint16_t RxCopyCount;
+uint16_t RxReadyFlag = 0;
+uint16_t RxCopyCount = 0;
 extern uint16_t receivedChar[16];
 
 void SendDataSCI(uint32_t SelSCI, uint16_t * TrsData, SCI_TxFIFOLevel size) {
@@ -38,8 +38,8 @@ void RcvCmdData(uint32_t SelSCI, uint16_t * RcvData, SCI_RxFIFOLevel size) {
     SCI_enableModule(SelSCI);
     SCI_performSoftwareReset(SelSCI);
 
-    SCI_setFIFOInterruptLevel(SCIA_BASE, SCI_FIFO_TX1, size);
-    SCI_enableInterrupt(SCIA_BASE, SCI_INT_TXFF | SCI_INT_RXFF);
+    SCI_setFIFOInterruptLevel(SCIA_BASE, SCI_FIFO_TX0, size);
+    SCI_enableInterrupt(SCIA_BASE, SCI_INT_TXRDY | SCI_INT_RXFF);
 
     while(RxReadyFlag == 0);
 
