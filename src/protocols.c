@@ -33,6 +33,7 @@ void RcvCmdData(uint32_t SelSCI, uint16_t * RcvData, SCI_RxFIFOLevel size) {
     RxCopyCount = size;
 
     SCI_resetChannels(SelSCI);
+    SCI_disableInterrupt(SelSCI, SCI_INT_TXRDY | SCI_INT_RXFF);
     SCI_clearInterruptStatus(SelSCI, SCI_INT_TXRDY | SCI_INT_RXRDY_BRKDT);
     SCI_enableFIFO(SelSCI);
     SCI_enableModule(SelSCI);
