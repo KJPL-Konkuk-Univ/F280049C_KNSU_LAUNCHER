@@ -39,6 +39,7 @@ extern uint16_t RxReadyFlag;
 extern uint16_t RxCopyCount;
 
 uint16_t receivedChar[16];
+uint16_t cmd[16];
 
 // Function Prototypes
 
@@ -127,8 +128,9 @@ void main(void)
     EINT;
 
     for(;;) {
-        SendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
-        RcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
+        sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
+        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
+        parseMsgSCI(rData, cmd);
     }
 }
 

@@ -9,11 +9,12 @@
 #include "driverlib.h"
 #include "device.h"
 
+
 uint16_t RxReadyFlag = 0;
 uint16_t RxCopyCount = 0;
 extern uint16_t receivedChar[16];
 
-void SendDataSCI(uint32_t SelSCI, uint16_t * TrsData, SCI_TxFIFOLevel size) {
+void sendDataSCI(uint32_t SelSCI, uint16_t * TrsData, SCI_TxFIFOLevel size) {
     uint16_t i, rACK[16];
 
 
@@ -39,7 +40,7 @@ void SendDataSCI(uint32_t SelSCI, uint16_t * TrsData, SCI_TxFIFOLevel size) {
     }
 }
 
-void RcvCmdData(uint32_t SelSCI, uint16_t * RcvData, SCI_RxFIFOLevel size) {
+void rcvCmdData(uint32_t SelSCI, uint16_t * RcvData, SCI_RxFIFOLevel size) {
     RxReadyFlag = 0;
     RxCopyCount = size;
 
@@ -57,4 +58,34 @@ void RcvCmdData(uint32_t SelSCI, uint16_t * RcvData, SCI_RxFIFOLevel size) {
 
 
     memcpy(RcvData, receivedChar, size*2);
+}
+
+/*******************************************************************
+* parseMsgSCI - Parsing received data
+*
+* DataFrame[16]---------------
+* ID 1(0)
+* Target 2(1)
+* Length 3(2)       - MAX:13
+* Data 4~16(3 ~ 15)
+*
+* CmdData[16]-----------------
+* ID 1(0)
+* Target 2(1)
+* Data 3~16(2~15)
+*
+*******************************************************************/
+void parseMsgSCI(uint16_t* DataFrame, uint16_t* CmdData) {
+    uint16_t i;
+
+    if(DataFrame[0] > 0) {
+        CmdData[0] = DataFrame[0];
+        CmdData[1] = DataFrame[1];
+        if(DataFrame[2] <= 13) {
+            for (i=0;i<DataFrame[2];i++) {
+                CmdData[i+2] = DataFrame[i*2+3] & 0xFF;
+                CmdData[i+2] |= (DataFrame[i*2+4] & 0XFF) << 8;
+            }
+        }
+    }
 }
