@@ -13,4 +13,5 @@
 	<origin value="C:\ti\c2000\C2000Ware_3_04_00_00\driverlib\f28004x\examples\sci\CCS\sci_ex2_interrupts.projectspec"/>
 	<filesToOpen value=""/>
 	<isTargetManual value="true"/>
+	<sourceLookupPath value=""/>
 </projectOptions>
