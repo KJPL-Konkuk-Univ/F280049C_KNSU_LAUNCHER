@@ -10,5 +10,6 @@
 - 권구현
 
 ## References
+- [https://github.com/trollonion03/A_F28x_Protocols]
 - [https://whispering-cicada-184.notion.site/KJPL-bc9ad3887b494be0be3a3121f1435958]
 - [https://www.ti.com/tool/LAUNCHXL-F280049C]
