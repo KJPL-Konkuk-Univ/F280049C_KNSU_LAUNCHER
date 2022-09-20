@@ -1,4 +1,4 @@
-/*********************************************
+/*
  * protocols.c
  *
  *  Created on: 2022. 9. 5.
@@ -88,4 +88,27 @@ void parseMsgSCI(uint16_t* DataFrame, uint16_t* CmdData) {
             }
         }
     }
+}
+
+/*******************************************************************
+* makePacketSCI
+*
+* packet_data[16]---------------
+* ID 1(0)
+* Target 2(1)
+* Length 3(2)       - MAX:6
+* Data 4~16(3 ~ 15)
+*
+*******************************************************************/
+void makePacketSCI(uint16_t* dataFrame, uint16_t* packet_data, uint16_t ID, uint16_t len, uint16_t target) {
+    unsigned char temp[16];
+    uint16_t i;
+    temp[0] = ID;
+    temp[1] = target;
+    if (len < 6)
+        for (i=0;i<len;i++) {
+            temp[i*2+2] = dataFrame[i] & 0xFF;
+            temp[i*2+3] = (dataFrame[i] & 0xFF) >> 8;
+        }
+    memcpy(packet_data, (uint16_t)temp, sizeof(packet_data));
 }
