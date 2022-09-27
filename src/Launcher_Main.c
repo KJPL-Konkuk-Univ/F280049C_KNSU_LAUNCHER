@@ -38,7 +38,7 @@ unsigned char data[16];
 extern uint16_t RxReadyFlag;
 extern uint16_t RxCopyCount;
 
-uint16_t receivedChar[16];
+extern uint16_t receivedChar[16];
 uint16_t cmd[16];
 
 // Function Prototypes
