@@ -35,10 +35,6 @@ volatile uint16_t rData[16];
 unsigned char *msg;
 unsigned char data[16];
 
-extern uint16_t RxReadyFlag;
-extern uint16_t RxCopyCount;
-
-extern uint16_t receivedChar[16];
 uint16_t cmd[16];
 
 // Function Prototypes
@@ -156,6 +152,7 @@ __interrupt void sciaTxISR(void) {
 //sciaRxISR - Read the character from the RXBUF.
 __interrupt void sciaRxISR(void) {
     uint16_t i;
+    unsigned char Ack[2];
 
     // Enable the TXRDY interrupt again.
     //SCI_enableInterrupt(SCIA_BASE, SCI_INT_TXRDY);
@@ -165,12 +162,13 @@ __interrupt void sciaRxISR(void) {
         receivedChar[i] = SCI_readCharBlockingNonFIFO(SCIA_BASE);
     }
 
-    // Echo back the character.
-//    msg = "  You sent: \0";
-//    SCI_writeCharArray(SCIA_BASE, (uint16_t*)data, 16);
-   // SCI_writeCharBlockingNonFIFO(SCIA_BASE, receivedChar);
+    //return Ack via SCI
+    if(receivedChar[0] == 1) {
+        Ack[0] = 1;
+        Ack[1] = 8;
+    }
+    SCI_writeCharArray(SCIA_BASE, (uint16_t*)Ack, sizeof(Ack));
 
-    // Acknowledge the PIE interrupt.
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
     RxReadyFlag = 1;

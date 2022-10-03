@@ -110,5 +110,5 @@ void makePacketSCI(uint16_t* dataFrame, uint16_t* packet_data, uint16_t ID, uint
             temp[i*2+2] = dataFrame[i] & 0xFF;
             temp[i*2+3] = (dataFrame[i] & 0xFF) >> 8;
         }
-    memcpy(packet_data, (uint16_t)temp, sizeof(packet_data));
+    memcpy(packet_data, temp, sizeof(packet_data));
 }
