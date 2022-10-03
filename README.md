@@ -2,9 +2,9 @@
 
 ## Target
 - LAUNCHXL-F280049C
-- TMS320F280049c(c2000)
+- TMS320F280049C(c2000)
 
-## Team Memvers
+## Team Members
 - 김형언
 - 강민우
 - 권구현
