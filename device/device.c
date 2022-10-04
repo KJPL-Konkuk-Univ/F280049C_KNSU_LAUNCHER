@@ -285,4 +285,10 @@ void PinMux_setup_SCI(void) {
 void PinMux_setup_GPIO(void) {
     GPIO_setPadConfig(DEVICE_GPIO_PIN_LED1, GPIO_PIN_TYPE_STD);
     GPIO_setDirectionMode(DEVICE_GPIO_PIN_LED1, GPIO_DIR_MODE_OUT);
+
+    GPIO_setPadConfig(GPIO_35_GPIO35, GPIO_PIN_TYPE_STD);
+    GPIO_setDirectionMode(GPIO_35_GPIO35, GPIO_DIR_MODE_OUT);
+
+    GPIO_setPadConfig(GPIO_37_GPIO37, GPIO_PIN_TYPE_STD);
+    GPIO_setDirectionMode(GPIO_37_GPIO37, GPIO_DIR_MODE_OUT);
 }

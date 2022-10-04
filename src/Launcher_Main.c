@@ -24,6 +24,7 @@ extern uint16_t RamfuncsRunStart;
 #define AUTOBAUD 0
 #define RESTRICTED_REGS 0
 #define USE_TX_INTERRUPT 0
+#define LOOPBACK 0
 
 /***************************************************************************************
 * Globals, for large data (Do not use malloc)
@@ -90,6 +91,9 @@ void main(void)
     SCI_setConfig(SCIA_BASE, 25000000, 9600, (SCI_CONFIG_WLEN_8 |
                                              SCI_CONFIG_STOP_ONE |
                                              SCI_CONFIG_PAR_NONE));
+#if LOOPBACK
+    SCI_disableLoopback(SCIA_BASE);
+#endif
     SCI_resetChannels(SCIA_BASE);
     SCI_clearInterruptStatus(SCIA_BASE, SCI_INT_TXRDY | SCI_INT_RXRDY_BRKDT);
     SCI_enableFIFO(SCIA_BASE);
