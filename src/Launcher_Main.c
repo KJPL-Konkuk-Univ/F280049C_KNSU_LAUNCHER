@@ -92,6 +92,8 @@ void main(void)
                                              SCI_CONFIG_STOP_ONE |
                                              SCI_CONFIG_PAR_NONE));
 #if LOOPBACK
+    SCI_enableLoopback(SCIA_BASE);
+#else
     SCI_disableLoopback(SCIA_BASE);
 #endif
     SCI_resetChannels(SCIA_BASE);
@@ -121,6 +123,12 @@ void main(void)
 
     // Enable global interrupts.
     EINT;
+
+    // Set test data
+    int i;
+    for(i=0; i<16; i++) {
+        sData[i] = i;
+    }
 
     for(;;) {
         sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
