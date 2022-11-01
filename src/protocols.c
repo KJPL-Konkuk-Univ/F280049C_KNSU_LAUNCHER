@@ -20,6 +20,7 @@ void sendDataSCI(uint32_t SelSCI, uint16_t * TrsData, SCI_TxFIFOLevel size) {
     SCI_writeCharArray(SelSCI, TrsData, 32);
 
     //ADD check ACK
+    //TODO : refactor interrupt setup code
     SCI_resetChannels(SelSCI);
     SCI_disableInterrupt(SelSCI, SCI_INT_TXFF | SCI_INT_RXFF);
     SCI_clearInterruptStatus(SelSCI, SCI_INT_TXFF | SCI_INT_RXFF);
@@ -36,6 +37,7 @@ void sendDataSCI(uint32_t SelSCI, uint16_t * TrsData, SCI_TxFIFOLevel size) {
 //    if(rACK[1] != 8) {
 //        ESTOP0;
 //    }
+    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 }
 
 void rcvCmdData(uint32_t SelSCI, uint16_t * RcvData, SCI_RxFIFOLevel size) {
@@ -56,6 +58,7 @@ void rcvCmdData(uint32_t SelSCI, uint16_t * RcvData, SCI_RxFIFOLevel size) {
 
 
     memcpy(RcvData, receivedChar, size*2);
+    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 }
 
 /*******************************************************************

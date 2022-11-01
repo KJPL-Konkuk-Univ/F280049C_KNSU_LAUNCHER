@@ -131,7 +131,7 @@ void main(void)
     }
 
     for(;;) {
-//       sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
+        sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
 //        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
 //        parseMsgSCI(rData, cmd);
     }
