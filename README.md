@@ -15,4 +15,4 @@
 - [https://www.ti.com/tool/LAUNCHXL-F280049C] (TRM, Page 989)
 
 ## TODO
-- EPWM setup(chopper) --> for A4988
+- EPWM setup(chopper) --> for A4988 (TRM, Page 1878)
