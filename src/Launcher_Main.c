@@ -131,7 +131,7 @@ void main(void)
     }
 
     for(;;) {
-        sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
+//       sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
 //        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
 //        parseMsgSCI(rData, cmd);
     }
@@ -164,14 +164,14 @@ __interrupt void sciaRxISR(void) {
 
     // Read a character from the RXBUF.
     for (i=0;i<RxCopyCount;i++) {
-        receivedChar[i] = SCI_readCharBlockingNonFIFO(SCIA_BASE);
+        receivedChar[i] = SCI_readCharNonBlocking(SCIA_BASE);
     }
 
     //return Ack via SCI
-    if(receivedChar[0] == 1) {
+    //if(receivedChar[0] == 1) {
         Ack[0] = 1;
         Ack[1] = 8;
-    }
+    //}
     SCI_writeCharArray(SCIA_BASE, (uint16_t*)Ack, sizeof(Ack));
 
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
