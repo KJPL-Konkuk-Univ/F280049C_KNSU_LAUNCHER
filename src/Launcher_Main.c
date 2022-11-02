@@ -157,6 +157,7 @@ void main(void)
 
     for(;;) {
         sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
+        DEVICE_DELAY_US(500000);
 //        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
 //        parseMsgSCI(rData, cmd);
     }
