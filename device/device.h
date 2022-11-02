@@ -331,6 +331,7 @@ extern uint16_t RamfuncsRunSize;
 #endif
 
 #define DEVICE_FLASH_WAITSTATES 4
+#define EPWM_TIMER_TBPRD    500UL
 
 
 extern uint32_t Example_PassCount;
@@ -348,5 +349,6 @@ extern void __error__(char *filename, uint32_t line);
 extern void PinMux_setup_SCI(void);
 extern void PinMux_setup_GPIO(void);
 extern void PinMux_setup_EPWM(void);
+extern void initEPWM(uint32_t base);
 
 #endif // __DEVICE_H__

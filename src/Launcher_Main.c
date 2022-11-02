@@ -25,7 +25,6 @@ extern uint16_t RamfuncsRunStart;
 #define RESTRICTED_REGS 1
 #define USE_TX_INTERRUPT 0
 #define LOOPBACK 0
-#define EPWM_TIMER_TBPRD    500UL
 
 /***************************************************************************************
 * Globals, for large data (Do not use malloc)
@@ -39,7 +38,6 @@ unsigned char data[16];
 uint16_t cmd[16];
 
 // Function Prototypes
-void initEPWM(uint32_t);
 
 //for setup
 
@@ -125,7 +123,7 @@ void main(void)
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
     /************************************************************************
-    * Configure EPWM (PWM)
+    * Configure EPWM 1&2 (PWM)
     * MODE = Chopper
     * duty cycle = (1/8)
     * One-Shot Pulse = Disabled
@@ -142,6 +140,12 @@ void main(void)
     EPWM_setChopperFreq(EPWM1_BASE, 3);
     //EPWM_setChopperFirstPulseWidth(EPWM1_BASE, 10);
     EPWM_enableChopper(EPWM1_BASE);
+
+    initEPWM(EPWM2_BASE);
+    EPWM_setChopperDutyCycle(EPWM2_BASE, 0);
+    EPWM_setChopperFreq(EPWM2_BASE, 3);
+    //EPWM_setChopperFirstPulseWidth(EPWM1_BASE, 10);
+    EPWM_enableChopper(EPWM2_BASE);
 
     SysCtl_enablePeripheral(SYSCTL_PERIPH_CLK_TBCLKSYNC);
 
@@ -205,74 +209,3 @@ __interrupt void sciaRxISR(void) {
 
     RxReadyFlag = 1;
 }
-
-void initEPWM(uint32_t base)
-{
-    //
-    // Set-up TBCLK
-    //
-    EPWM_setTimeBasePeriod(base, EPWM_TIMER_TBPRD);
-    EPWM_setPhaseShift(base, 0U);
-    EPWM_setTimeBaseCounter(base, 0U);
-    EPWM_setTimeBaseCounterMode(base, EPWM_COUNTER_MODE_UP_DOWN);
-    EPWM_disablePhaseShiftLoad(base);
-
-    //
-    // Set ePWM clock pre-scaler
-    //
-    EPWM_setClockPrescaler(base,
-                           EPWM_CLOCK_DIVIDER_4,
-                           EPWM_HSCLOCK_DIVIDER_4);
-
-    //
-    // Set up shadowing
-    //
-    EPWM_setCounterCompareShadowLoadMode(base,
-                                         EPWM_COUNTER_COMPARE_A,
-                                         EPWM_COMP_LOAD_ON_CNTR_ZERO);
-
-    //
-    // Set-up compare
-    //
-    EPWM_setCounterCompareValue(base, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD/4);
-    EPWM_setCounterCompareValue(base, EPWM_COUNTER_COMPARE_B, 3*EPWM_TIMER_TBPRD/4);
-
-    //
-    // Set actions
-    //
-    EPWM_setActionQualifierAction(base,
-                                      EPWM_AQ_OUTPUT_A,
-                                      EPWM_AQ_OUTPUT_LOW,
-                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_ZERO);
-    EPWM_setActionQualifierAction(base,
-                                      EPWM_AQ_OUTPUT_A,
-                                      EPWM_AQ_OUTPUT_HIGH,
-                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_UP_CMPA);
-    EPWM_setActionQualifierAction(base,
-                                      EPWM_AQ_OUTPUT_A,
-                                      EPWM_AQ_OUTPUT_NO_CHANGE,
-                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_PERIOD);
-    EPWM_setActionQualifierAction(base,
-                                      EPWM_AQ_OUTPUT_A,
-                                      EPWM_AQ_OUTPUT_LOW,
-                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_DOWN_CMPA);
-    EPWM_setActionQualifierAction(base,
-                                      EPWM_AQ_OUTPUT_B,
-                                      EPWM_AQ_OUTPUT_LOW,
-                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_ZERO);
-    EPWM_setActionQualifierAction(base,
-                                      EPWM_AQ_OUTPUT_B,
-                                      EPWM_AQ_OUTPUT_HIGH,
-                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_UP_CMPB);
-    EPWM_setActionQualifierAction(base,
-                                      EPWM_AQ_OUTPUT_B,
-                                      EPWM_AQ_OUTPUT_NO_CHANGE,
-                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_PERIOD);
-    EPWM_setActionQualifierAction(base,
-                                      EPWM_AQ_OUTPUT_B,
-                                      EPWM_AQ_OUTPUT_LOW,
-                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_DOWN_CMPB);
-
-}
-
-
