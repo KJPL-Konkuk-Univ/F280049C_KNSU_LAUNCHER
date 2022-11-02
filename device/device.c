@@ -293,3 +293,11 @@ void PinMux_setup_GPIO(void) {
 //    GPIO_setPadConfig(GPIO_37_GPIO37, GPIO_PIN_TYPE_STD);
 //    GPIO_setDirectionMode(GPIO_37_GPIO37, GPIO_DIR_MODE_OUT);
 }
+
+#define GPIO_PIN_EPWM1_A 0
+#define GPIO_PIN_EPWM1_B 1
+
+void PinMux_setup_EPWM(void) {
+    GPIO_setPinConfig(GPIO_0_EPWM1_A);
+    GPIO_setPinConfig(GPIO_1_EPWM1_B);
+}

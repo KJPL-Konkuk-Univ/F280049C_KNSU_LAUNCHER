@@ -347,5 +347,6 @@ extern void Device_initGPIO(void);
 extern void __error__(char *filename, uint32_t line);
 extern void PinMux_setup_SCI(void);
 extern void PinMux_setup_GPIO(void);
+extern void PinMux_setup_EPWM(void);
 
 #endif // __DEVICE_H__

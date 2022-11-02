@@ -22,9 +22,10 @@ extern uint16_t RamfuncsRunStart;
 
 //Defines
 #define AUTOBAUD 0
-#define RESTRICTED_REGS 0
+#define RESTRICTED_REGS 1
 #define USE_TX_INTERRUPT 0
 #define LOOPBACK 0
+#define EPWM_TIMER_TBPRD    500UL
 
 /***************************************************************************************
 * Globals, for large data (Do not use malloc)
@@ -38,6 +39,7 @@ unsigned char data[16];
 uint16_t cmd[16];
 
 // Function Prototypes
+void initEPWM(uint32_t);
 
 //for setup
 
@@ -59,6 +61,7 @@ void main(void)
 
 #if RESTRICTED_REGS
     EALLOW;
+    PinMux_setup_EPWM();
     EDIS;
 #endif
 
@@ -121,10 +124,32 @@ void main(void)
 //    Interrupt_enable(INT_SCIA_TX);
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
-    // Enable global interrupts.
-    EINT;
+    /************************************************************************
+    * Configure EPWM (PWM)
+    * MODE = Chopper
+    * duty cycle = (1/8)
+    * One-Shot Pulse = Disabled
+    *************************************************************************
+    * ! Disable sync(Freeze clock to PWM as well). GTBCLKSYNC is applicable
+    * ! only for multiple core devices. Uncomment the below statement if
+    * ! applicable.
+    ************************************************************************/
+    // SysCtl_disablePeripheral(SYSCTL_PERIPH_CLK_GTBCLKSYNC);
+    SysCtl_disablePeripheral(SYSCTL_PERIPH_CLK_TBCLKSYNC);
 
-    // Set test data
+    initEPWM(EPWM1_BASE);
+    EPWM_setChopperDutyCycle(EPWM1_BASE, 0);
+    EPWM_setChopperFreq(EPWM1_BASE, 3);
+    //EPWM_setChopperFirstPulseWidth(EPWM1_BASE, 10);
+    EPWM_enableChopper(EPWM1_BASE);
+
+    SysCtl_enablePeripheral(SYSCTL_PERIPH_CLK_TBCLKSYNC);
+
+    // Enable global interrupts. and real time interrupt
+    EINT;
+    ERTM;
+
+    // Set test data - for debug
     int i;
     for(i=0; i<16; i++) {
         sData[i] = i;
@@ -145,11 +170,12 @@ void main(void)
 *******************************************************************/
 __interrupt void sciaTxISR(void) {
     // Disable the TXRDY interrupt.
-    SCI_disableInterrupt(SCIA_BASE, SCI_INT_TXRDY);
-    SCI_writeCharArray(SCIA_BASE, 0, 22);
-
-    // Ackowledge the PIE interrupt.
-    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
+//    SCI_disableInterrupt(SCIA_BASE, SCI_INT_TXRDY);
+//    SCI_writeCharArray(SCIA_BASE, 0, 22);
+//
+//    // Ackowledge the PIE interrupt.
+//    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
+    asm ("  NOP");
 }
 #endif
 
@@ -177,6 +203,75 @@ __interrupt void sciaRxISR(void) {
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
     RxReadyFlag = 1;
+}
+
+void initEPWM(uint32_t base)
+{
+    //
+    // Set-up TBCLK
+    //
+    EPWM_setTimeBasePeriod(base, EPWM_TIMER_TBPRD);
+    EPWM_setPhaseShift(base, 0U);
+    EPWM_setTimeBaseCounter(base, 0U);
+    EPWM_setTimeBaseCounterMode(base, EPWM_COUNTER_MODE_UP_DOWN);
+    EPWM_disablePhaseShiftLoad(base);
+
+    //
+    // Set ePWM clock pre-scaler
+    //
+    EPWM_setClockPrescaler(base,
+                           EPWM_CLOCK_DIVIDER_4,
+                           EPWM_HSCLOCK_DIVIDER_4);
+
+    //
+    // Set up shadowing
+    //
+    EPWM_setCounterCompareShadowLoadMode(base,
+                                         EPWM_COUNTER_COMPARE_A,
+                                         EPWM_COMP_LOAD_ON_CNTR_ZERO);
+
+    //
+    // Set-up compare
+    //
+    EPWM_setCounterCompareValue(base, EPWM_COUNTER_COMPARE_A, EPWM_TIMER_TBPRD/4);
+    EPWM_setCounterCompareValue(base, EPWM_COUNTER_COMPARE_B, 3*EPWM_TIMER_TBPRD/4);
+
+    //
+    // Set actions
+    //
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_A,
+                                      EPWM_AQ_OUTPUT_LOW,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_ZERO);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_A,
+                                      EPWM_AQ_OUTPUT_HIGH,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_UP_CMPA);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_A,
+                                      EPWM_AQ_OUTPUT_NO_CHANGE,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_PERIOD);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_A,
+                                      EPWM_AQ_OUTPUT_LOW,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_DOWN_CMPA);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_B,
+                                      EPWM_AQ_OUTPUT_LOW,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_ZERO);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_B,
+                                      EPWM_AQ_OUTPUT_HIGH,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_UP_CMPB);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_B,
+                                      EPWM_AQ_OUTPUT_NO_CHANGE,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_PERIOD);
+    EPWM_setActionQualifierAction(base,
+                                      EPWM_AQ_OUTPUT_B,
+                                      EPWM_AQ_OUTPUT_LOW,
+                                      EPWM_AQ_OUTPUT_ON_TIMEBASE_DOWN_CMPB);
+
 }
 
 
