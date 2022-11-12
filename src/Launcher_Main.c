@@ -38,6 +38,7 @@ unsigned char data[16];
 uint16_t cmd[16];
 
 // Function Prototypes
+void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed);
 
 //for setup
 
@@ -132,6 +133,7 @@ void main(void)
     * ! only for multiple core devices. Uncomment the below statement if
     * ! applicable.
     ************************************************************************/
+#if 0
     // SysCtl_disablePeripheral(SYSCTL_PERIPH_CLK_GTBCLKSYNC);
     SysCtl_disablePeripheral(SYSCTL_PERIPH_CLK_TBCLKSYNC);
 
@@ -148,7 +150,7 @@ void main(void)
     EPWM_enableChopper(EPWM2_BASE);
 
     SysCtl_enablePeripheral(SYSCTL_PERIPH_CLK_TBCLKSYNC);
-
+#endif
     // Enable global interrupts. and real time interrupt
     EINT;
     ERTM;
@@ -160,8 +162,9 @@ void main(void)
     }
 
     for(;;) {
-        sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
+        //sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
         DEVICE_DELAY_US(500000);
+        GPIO_controlStepper(56, 360, 4000);
 //        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
 //        parseMsgSCI(rData, cmd);
     }
@@ -208,4 +211,14 @@ __interrupt void sciaRxISR(void) {
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
     RxReadyFlag = 1;
+}
+
+void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed) {
+    uint32_t i;
+    for(i = 0; i < (uint32_t)(angle / 1.8) ; i++) { // 1.8 degree per step
+        GPIO_writePin(pin, 1);
+        DEVICE_DELAY_US(500000); //speed
+        GPIO_writePin(pin, 0);
+        DEVICE_DELAY_US(500000); //speed
+    }
 }
