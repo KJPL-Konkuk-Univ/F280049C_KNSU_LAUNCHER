@@ -25,6 +25,7 @@ extern uint16_t RamfuncsRunStart;
 #define RESTRICTED_REGS 1
 #define USE_TX_INTERRUPT 0
 #define LOOPBACK 0
+#define SLAVE_ADDRESS   0x3C
 
 /***************************************************************************************
 * Globals, for large data (Do not use malloc)
@@ -39,6 +40,7 @@ uint16_t cmd[16];
 
 // Function Prototypes
 void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed);
+void I2C_init(void);
 
 //for setup
 
@@ -46,8 +48,10 @@ void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed);
 //Interrupt Service Routine
 #if USE_TX_INTERRUPT
 __interrupt void sciaTxISR(void);
+__interrupt void scibTxISR(void);
 #endif
 __interrupt void sciaRxISR(void);
+__interrupt void scibRxISR(void);
 
 
 void main(void)
@@ -55,8 +59,11 @@ void main(void)
     // Configure Device.
     Device_init();
     Device_initGPIO();
+    PinMux_setup_I2C();
     PinMux_setup_SCI();
     PinMux_setup_GPIO();
+
+    I2C_init();
 
 #if RESTRICTED_REGS
     EALLOW;
@@ -76,11 +83,14 @@ void main(void)
     // Map the ISR to the wake interrupt.
 #if USE_TX_INTERRUPT
     Interrupt_register(INT_SCIA_TX, sciaTxISR);
+    Interrupt_register(INT_SCIB_TX, sciaTxISR);
 #endif
     Interrupt_register(INT_SCIA_RX, sciaRxISR);
+    Interrupt_register(INT_SCIB_RX, sciaRxISR);
 
     // Initialize SCIA and its FIFO.
     SCI_performSoftwareReset(SCIA_BASE);
+    SCI_performSoftwareReset(SCIB_BASE);
 
     /************************************************************************
     * Configure SCIA (UART_A)
@@ -89,14 +99,29 @@ void main(void)
     * Parity = None
     * Stop Bits = 1
     * Hardware Control = None
+    *
+    * Configure SCIB (UART_B)
+    * Bits per second = 9600
+    * Data Bits = 8
+    * Parity = None
+    * Stop Bits = 1
+    * Hardware Control = Yes
     ************************************************************************/
+    //SCIA - CMD
     SCI_setConfig(SCIA_BASE, 25000000, 9600, (SCI_CONFIG_WLEN_8 |
                                              SCI_CONFIG_STOP_ONE |
                                              SCI_CONFIG_PAR_NONE));
+    //SCIB - GPS
+    SCI_setConfig(SCIB_BASE, 25000000, 9600, (SCI_CONFIG_WLEN_8 |
+                                             SCI_CONFIG_STOP_ONE |
+                                             SCI_CONFIG_PAR_NONE));
+
 #if LOOPBACK
     SCI_enableLoopback(SCIA_BASE);
+    SCI_enableLoopback(SCIB_BASE);
 #else
     SCI_disableLoopback(SCIA_BASE);
+    SCI_disableLoopback(SCIB_BASE);
 #endif
     SCI_resetChannels(SCIA_BASE);
     SCI_clearInterruptStatus(SCIA_BASE, SCI_INT_TXRDY | SCI_INT_RXRDY_BRKDT);
@@ -104,22 +129,34 @@ void main(void)
     SCI_enableModule(SCIA_BASE);
     SCI_performSoftwareReset(SCIA_BASE);
 
+    SCI_resetChannels(SCIB_BASE);
+    SCI_clearInterruptStatus(SCIB_BASE, SCI_INT_TXRDY | SCI_INT_RXRDY_BRKDT);
+    SCI_enableFIFO(SCIB_BASE);
+    SCI_enableModule(SCIB_BASE);
+    SCI_performSoftwareReset(SCIB_BASE);
+
     // Enable the TXRDY and RXRDY interrupts.
     SCI_setFIFOInterruptLevel(SCIA_BASE, SCI_FIFO_TX0, SCI_FIFO_RX16);
     SCI_enableInterrupt(SCIA_BASE, SCI_INT_TXFF | SCI_INT_RXFF);
+
+    SCI_setFIFOInterruptLevel(SCIB_BASE, SCI_FIFO_TX0, SCI_FIFO_RX16);
+    SCI_enableInterrupt(SCIB_BASE, SCI_INT_TXFF | SCI_INT_RXFF);
 
 #if AUTOBAUD
     // Perform an autobaud lock.
     // SCI expects an 'a' or 'A' to lock the baud rate.
     SCI_lockAutobaud(SCIA_BASE);
+    SCI_lockAutobaud(SCIB_BASE);
 #endif
 
     // Clear the SCI interrupts before enabling them.
     SCI_clearInterruptStatus(SCIA_BASE, SCI_INT_TXFF | SCI_INT_RXFF);
+    SCI_clearInterruptStatus(SCIB_BASE, SCI_INT_TXFF | SCI_INT_RXFF);
 
 
     // Enable the interrupts in the PIE: Group 9 interrupts 1 & 2.
     Interrupt_enable(INT_SCIA_RX);
+    Interrupt_enable(INT_SCIB_RX);
 //    Interrupt_enable(INT_SCIA_TX);
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
@@ -185,6 +222,20 @@ __interrupt void sciaTxISR(void) {
 //    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
     asm ("  NOP");
 }
+
+/*******************************************************************
+* sciaTxISR - Disable the TXRDY interrupt and print message asking
+*             for a character.
+*******************************************************************/
+__interrupt void scibTxISR(void) {
+    // Disable the TXRDY interrupt.
+//    SCI_disableInterrupt(SCIA_BASE, SCI_INT_TXRDY);
+//    SCI_writeCharArray(SCIA_BASE, 0, 22);
+//
+//    // Ackowledge the PIE interrupt.
+//    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
+    asm ("  NOP");
+}
 #endif
 
 
@@ -213,6 +264,35 @@ __interrupt void sciaRxISR(void) {
     RxReadyFlag = 1;
 }
 
+//scibRxISR - Read the character from the RXBUF.
+__interrupt void scibRxISR(void) {
+#if 0
+    uint16_t i;
+    unsigned char Ack[2];
+
+    // Enable the TXRDY interrupt again.
+    //SCI_enableInterrupt(SCIA_BASE, SCI_INT_TXRDY);
+
+    // Read a character from the RXBUF.
+    for (i=0;i<RxCopyCount;i++) {
+        receivedChar[i] = SCI_readCharNonBlocking(SCIA_BASE);
+    }
+
+    //return Ack via SCI
+    //if(receivedChar[0] == 1) {
+        Ack[0] = 1;
+        Ack[1] = 8;
+    //}
+    SCI_writeCharArray(SCIA_BASE, (uint16_t*)Ack, sizeof(Ack));
+
+    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
+
+    RxReadyFlag = 1;
+#else
+    asm ("  NOP");
+#endif
+}
+
 void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed) {
     uint32_t i;
     for(i = 0; i < (uint32_t)(angle / 1.8) ; i++) { // 1.8 degree per step
@@ -222,3 +302,27 @@ void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed) {
         DEVICE_DELAY_US(500000); //speed
     }
 }
+
+void I2C_init(void) {
+    I2C_disableModule(I2CA_BASE);
+    I2C_initMaster(I2CA_BASE, DEVICE_SYSCLK_FREQ, 400000, I2C_DUTYCYCLE_50);
+    I2C_setConfig(I2CA_BASE, I2C_MASTER_SEND_MODE);
+    I2C_setSlaveAddress(I2CA_BASE, 60);
+    I2C_disableLoopback(I2CA_BASE);
+    I2C_setBitCount(I2CA_BASE, I2C_BITCOUNT_8);
+    I2C_setDataCount(I2CA_BASE, 2);
+    I2C_setAddressMode(I2CA_BASE, I2C_ADDR_MODE_7BITS);
+    I2C_setEmulationMode(I2CA_BASE, I2C_EMULATION_STOP_SCL_LOW);
+    I2C_enableModule(I2CA_BASE);
+}
+
+void getDataI2C(uint32_t base, uint16_t Data) {
+    uint16_t i, tmp[9];
+    I2C_putData(base, 0x00);
+    I2C_sendStartCondition(base);
+    for(i = 0; i < 16; i++) {
+        tmp[i] = I2C_getData(base);
+    }
+    memcpy(Data, tmp, sizeof(tmp));
+}
+

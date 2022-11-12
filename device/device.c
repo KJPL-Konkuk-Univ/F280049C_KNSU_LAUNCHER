@@ -267,6 +267,8 @@ void __error__(char *filename, uint32_t line)
 //*****************************************************************************
 void PinMux_setup_SCI(void) {
     //setup PINMUX - READ TRM
+
+    //CMD
     // GPIO28 - SCI Rx pin, Pin3
     GPIO_setMasterCore(DEVICE_GPIO_PIN_SCIRXDA, GPIO_CORE_CPU1);
     GPIO_setPinConfig(DEVICE_GPIO_CFG_SCIRXDA);
@@ -280,6 +282,21 @@ void PinMux_setup_SCI(void) {
     GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_DIR_MODE_OUT);
     GPIO_setPadConfig(DEVICE_GPIO_PIN_SCITXDA, GPIO_PIN_TYPE_STD);
     GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_QUAL_ASYNC);
+
+    //GPS
+    //GPIO13_RX
+    GPIO_setMasterCore(13U, GPIO_CORE_CPU1);
+    GPIO_setPinConfig(GPIO_13_SCIB_RX);
+    GPIO_setDirectionMode(13U, GPIO_DIR_MODE_IN);
+    GPIO_setPadConfig(13U, GPIO_PIN_TYPE_STD);
+    GPIO_setQualificationMode(13U, GPIO_QUAL_ASYNC);
+    //GPIO13_TX
+    GPIO_setMasterCore(12U, GPIO_CORE_CPU1);
+    GPIO_setPinConfig(GPIO_12_SCIB_TX);
+    GPIO_setDirectionMode(12U, GPIO_DIR_MODE_OUT);
+    GPIO_setPadConfig(12U, GPIO_PIN_TYPE_STD);
+    GPIO_setQualificationMode(12U, GPIO_QUAL_ASYNC);
+
 }
 
 void PinMux_setup_GPIO(void) {
@@ -302,6 +319,15 @@ void PinMux_setup_EPWM(void) {
     //EPWM2
     GPIO_setPinConfig(GPIO_2_EPWM2_A);
     GPIO_setPinConfig(GPIO_3_EPWM2_B);
+}
+
+void PinMux_setup_I2C(void) {
+    GPIO_setPinConfig(GPIO_0_I2CA_SDA);
+    GPIO_setPadConfig(0, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setQualificationMode(0, GPIO_QUAL_ASYNC);
+    GPIO_setPinConfig(GPIO_1_I2CA_SCL);
+    GPIO_setPadConfig(1, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setQualificationMode(1, GPIO_QUAL_ASYNC);
 }
 
 void initEPWM(uint32_t base) {

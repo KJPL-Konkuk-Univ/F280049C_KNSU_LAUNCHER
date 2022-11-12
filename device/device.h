@@ -350,5 +350,6 @@ extern void PinMux_setup_SCI(void);
 extern void PinMux_setup_GPIO(void);
 extern void PinMux_setup_EPWM(void);
 extern void initEPWM(uint32_t base);
+extern void PinMux_setup_I2C(void);
 
 #endif // __DEVICE_H__
