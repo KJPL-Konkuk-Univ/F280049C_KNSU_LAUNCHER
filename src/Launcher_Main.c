@@ -40,7 +40,7 @@ uint16_t cmd[16];
 
 // Function Prototypes
 void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed);
-void I2C_init(void);
+void I2C_init();
 
 //for setup
 
@@ -130,17 +130,20 @@ void main(void)
     SCI_performSoftwareReset(SCIA_BASE);
 
     SCI_resetChannels(SCIB_BASE);
+#if 0
     SCI_clearInterruptStatus(SCIB_BASE, SCI_INT_TXRDY | SCI_INT_RXRDY_BRKDT);
     SCI_enableFIFO(SCIB_BASE);
+#endif
     SCI_enableModule(SCIB_BASE);
     SCI_performSoftwareReset(SCIB_BASE);
 
     // Enable the TXRDY and RXRDY interrupts.
     SCI_setFIFOInterruptLevel(SCIA_BASE, SCI_FIFO_TX0, SCI_FIFO_RX16);
     SCI_enableInterrupt(SCIA_BASE, SCI_INT_TXFF | SCI_INT_RXFF);
-
-    SCI_setFIFOInterruptLevel(SCIB_BASE, SCI_FIFO_TX0, SCI_FIFO_RX16);
+#if 0
+    SCI_setFIFOInterruptLevel(SCIB_BASE, SCI_FIFO_TX0, SCI_FIFO_RX0);
     SCI_enableInterrupt(SCIB_BASE, SCI_INT_TXFF | SCI_INT_RXFF);
+#endif
 
 #if AUTOBAUD
     // Perform an autobaud lock.
@@ -200,10 +203,11 @@ void main(void)
 
     for(;;) {
         //sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
-        DEVICE_DELAY_US(500000);
-        GPIO_controlStepper(56, 360, 4000);
+        //DEVICE_DELAY_US(500000);
+        //GPIO_controlStepper(56, 360, 4000);
 //        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
 //        parseMsgSCI(rData, cmd);
+        NOP;
     }
 }
 
@@ -241,22 +245,47 @@ __interrupt void scibTxISR(void) {
 
 //sciaRxISR - Read the character from the RXBUF.
 __interrupt void sciaRxISR(void) {
-    uint16_t i;
+    uint16_t i, flag = 0;
+    uint16_t parser[16] = { 0,};
     unsigned char Ack[2];
 
     // Enable the TXRDY interrupt again.
     //SCI_enableInterrupt(SCIA_BASE, SCI_INT_TXRDY);
 
     // Read a character from the RXBUF.
-    for (i=0;i<RxCopyCount;i++) {
+     for (i=0;i<RxCopyCount;i++) {
         receivedChar[i] = SCI_readCharNonBlocking(SCIA_BASE);
     }
 
+    reParse:
+    switch (receivedChar[0]) {
+    case 0: //return ERR
+        flag = 1;
+        break;
+    case 1: //unit8_t -> uint16_t
+        flag = 2;
+        parseMsgSCI(receivedChar, parser);
+        memcpy(receivedChar, parser, sizeof(parser));
+        goto reParse;
+    case 2: //ETC
+        flag = 3;
+        NOP;
+        break;
+    case 3: //ETC
+        flag = 4;
+        NOP;
+        break;
+    case 4: //no need to parse
+        flag = 5;
+        NOP;
+        break;
+    default:
+        break;
+    }
+
     //return Ack via SCI
-    //if(receivedChar[0] == 1) {
-        Ack[0] = 1;
-        Ack[1] = 8;
-    //}
+    Ack[0] = 1;
+    Ack[1] = flag;
     SCI_writeCharArray(SCIA_BASE, (uint16_t*)Ack, sizeof(Ack));
 
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
@@ -275,7 +304,7 @@ __interrupt void scibRxISR(void) {
 
     // Read a character from the RXBUF.
     for (i=0;i<RxCopyCount;i++) {
-        receivedChar[i] = SCI_readCharNonBlocking(SCIA_BASE);
+        receivedChar[i] = SCI_readCharNonBlocking(SCIB_BASE);
     }
 
     //return Ack via SCI
@@ -303,7 +332,7 @@ void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed) {
     }
 }
 
-void I2C_init(void) {
+void I2C_init() {
     I2C_disableModule(I2CA_BASE);
     I2C_initMaster(I2CA_BASE, DEVICE_SYSCLK_FREQ, 400000, I2C_DUTYCYCLE_50);
     I2C_setConfig(I2CA_BASE, I2C_MASTER_SEND_MODE);

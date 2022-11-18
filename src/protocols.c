@@ -19,7 +19,7 @@ uint16_t RxCopyCount = 16; //default: 16
 uint16_t receivedChar[16];
 
 void sendDataSCI(uint32_t SelSCI, uint16_t * TrsData, SCI_TxFIFOLevel size) {
-    uint16_t rACK[16];
+    //uint16_t rACK[16];
 
     SCI_writeCharArray(SelSCI, TrsData, 32);
     NOP;
@@ -107,12 +107,12 @@ void parseMsgSCI(uint16_t* DataFrame, uint16_t* CmdData) {
     uint16_t i;
 
     if(DataFrame[0] > 0) {
-        CmdData[0] = DataFrame[0];
+        CmdData[0] = 4;
         CmdData[1] = DataFrame[1];
         if(DataFrame[2] <= 13) {
             for (i=0;i<DataFrame[2];i++) {
                 CmdData[i+2] = DataFrame[i*2+3] & 0xFF;
-                CmdData[i+2] |= (DataFrame[i*2+4] & 0XFF) << 8;
+                CmdData[i+2] |= (DataFrame[i*2+4] & 0xFF) << 8;
             }
         }
     }
