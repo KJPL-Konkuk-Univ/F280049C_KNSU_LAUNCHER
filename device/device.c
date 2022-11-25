@@ -304,9 +304,16 @@ void PinMux_setup_GPIO(void) {
     GPIO_setDirectionMode(DEVICE_GPIO_PIN_LED1, GPIO_DIR_MODE_OUT);
 
     //GPIO_56 for stepper
-    GPIO_setPadConfig(56, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setPadConfig(56U, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setPadConfig(56U, GPIO_PIN_TYPE_STD);
     GPIO_setPinConfig(GPIO_56_GPIO56);
-    GPIO_setDirectionMode(35, GPIO_DIR_MODE_OUT);
+    GPIO_setDirectionMode(56U, GPIO_DIR_MODE_OUT);
+
+    //GPIO_22 for stepper
+    GPIO_setPadConfig(22U, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setPadConfig(22U, GPIO_PIN_TYPE_STD);
+    GPIO_setPinConfig(GPIO_22_GPIO22);
+    GPIO_setDirectionMode(22U, GPIO_DIR_MODE_OUT);
 }
 
 #define GPIO_PIN_EPWM1_A 0

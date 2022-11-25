@@ -204,7 +204,8 @@ void main(void)
     for(;;) {
         //sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
         //DEVICE_DELAY_US(500000);
-        //GPIO_controlStepper(56, 360, 4000);
+        GPIO_controlStepper(56U, 360, 5000);
+        GPIO_controlStepper(22U, 360, 5000);
 //        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
 //        parseMsgSCI(rData, cmd);
         NOP;
@@ -326,9 +327,9 @@ void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed) {
     uint32_t i;
     for(i = 0; i < (uint32_t)(angle / 1.8) ; i++) { // 1.8 degree per step
         GPIO_writePin(pin, 1);
-        DEVICE_DELAY_US(500000); //speed
+        DEVICE_DELAY_US(speed); //speed
         GPIO_writePin(pin, 0);
-        DEVICE_DELAY_US(500000); //speed
+        DEVICE_DELAY_US(speed); //speed
     }
 }
 
