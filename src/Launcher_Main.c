@@ -10,6 +10,7 @@
 //#############################################################################
 #include "driverlib.h"
 #include "device.h"
+#include <string.h>
 
 #include "inc/protocols.h"
 
@@ -37,10 +38,12 @@ volatile uint16_t rData[16];
 unsigned char data[16];
 
 uint16_t cmd[16];
+char* gpsData[];
 
 // Function Prototypes
 void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed);
 void I2C_init();
+uint16_t* parseGPS(char* nmea);
 
 //for setup
 
@@ -268,7 +271,7 @@ __interrupt void sciaRxISR(void) {
         parseMsgSCI(receivedChar, parser);
         memcpy(receivedChar, parser, sizeof(parser));
         goto reParse;
-    case 2: //ETC
+    case 2: //GPS
         flag = 3;
         NOP;
         break;
@@ -354,5 +357,54 @@ void getDataI2C(uint32_t base, uint16_t Data) {
         tmp[i] = I2C_getData(base);
     }
     memcpy(Data, tmp, sizeof(tmp));
+}
+
+uint16_t* parseGPS(char* nmea) {
+    char* data[16];
+    uint16_t flag = 0;
+    uint16_t i;
+    char GPGLL[2][11];
+
+    for(i=0; i<strlen(nmea); i++) {
+        if(nmea[i] == 0x0A) {
+            if(nmea[i+4] == 0x4C && nmea[i+5] == 0x4C) {
+                flag = i;
+            }
+        }
+        if(flag != 0) {
+            break;
+        }
+    }
+
+    for(i=flag+6; i<flag + 1024; i++) {
+        uint16_t idx = 0;
+        uint16_t idx2 = 0;
+        if(nmea[i] == ',') {
+            idx++;
+            idx2 = 0;
+        }
+
+        if(idx == 3) {
+            break;
+        }
+
+        if(nmea[i] != ',') {
+            GPGLL[idx-1][idx2] = nmea[i];
+            idx2++;
+        }
+    }
+
+    data[0] = 2;
+    data[1] = 0x4E;
+    for(i=0;i<=4;i++) {
+        data[i+3] = GPGLL[0][i];
+    }
+    data[6] = 0x2C;
+    data[7] = 0x45;
+    for(i=0;i<=4;i++) {
+        data[i+8] = GPGLL[0][i];
+    }
+
+    return (uint16_t*) *data;
 }
 
