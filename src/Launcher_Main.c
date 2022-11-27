@@ -38,12 +38,12 @@ volatile uint16_t rData[16];
 unsigned char data[16];
 
 uint16_t cmd[16];
-char* gpsData[];
+//char* gpsData[];
 
 // Function Prototypes
 void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed);
 void I2C_init();
-uint16_t* parseGPS(char* nmea);
+//uint16_t* parseGPS(char* nmea);
 
 //for setup
 
@@ -204,11 +204,20 @@ void main(void)
         sData[i] = i;
     }
 
+
+
     for(;;) {
         //sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
         //DEVICE_DELAY_US(500000);
-        GPIO_controlStepper(56U, 360, 5000);
-        GPIO_controlStepper(22U, 360, 5000);
+        GPIO_writePin(22U, 0);
+        GPIO_writePin(13U, 0);
+        GPIO_controlStepper(56U, 360*10, 500);
+        GPIO_controlStepper(40U, 360*10, 500);
+        GPIO_writePin(22U, 1);
+        GPIO_writePin(40U, 0);
+        GPIO_controlStepper(56U, 360*10, 500);
+        GPIO_controlStepper(40U, 360*10, 500);
+        //GPIO_controlStepper(22U, 360, 5000);
 //        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
 //        parseMsgSCI(rData, cmd);
         NOP;
@@ -359,6 +368,7 @@ void getDataI2C(uint32_t base, uint16_t Data) {
     memcpy(Data, tmp, sizeof(tmp));
 }
 
+#if 0
 uint16_t* parseGPS(char* nmea) {
     char* data[16];
     uint16_t flag = 0;
@@ -407,4 +417,4 @@ uint16_t* parseGPS(char* nmea) {
 
     return (uint16_t*) *data;
 }
-
+#endif

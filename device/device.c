@@ -282,26 +282,23 @@ void PinMux_setup_SCI(void) {
     GPIO_setDirectionMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_DIR_MODE_OUT);
     GPIO_setPadConfig(DEVICE_GPIO_PIN_SCITXDA, GPIO_PIN_TYPE_STD);
     GPIO_setQualificationMode(DEVICE_GPIO_PIN_SCITXDA, GPIO_QUAL_ASYNC);
-
-    //GPS
-    //GPIO13_RX
-    GPIO_setMasterCore(13U, GPIO_CORE_CPU1);
-    GPIO_setPinConfig(GPIO_13_SCIB_RX);
-    GPIO_setDirectionMode(13U, GPIO_DIR_MODE_IN);
-    GPIO_setPadConfig(13U, GPIO_PIN_TYPE_STD);
-    GPIO_setQualificationMode(13U, GPIO_QUAL_ASYNC);
-    //GPIO13_TX
-    GPIO_setMasterCore(12U, GPIO_CORE_CPU1);
-    GPIO_setPinConfig(GPIO_12_SCIB_TX);
-    GPIO_setDirectionMode(12U, GPIO_DIR_MODE_OUT);
-    GPIO_setPadConfig(12U, GPIO_PIN_TYPE_STD);
-    GPIO_setQualificationMode(12U, GPIO_QUAL_ASYNC);
-
 }
 
 void PinMux_setup_GPIO(void) {
     GPIO_setPadConfig(DEVICE_GPIO_PIN_LED1, GPIO_PIN_TYPE_STD);
     GPIO_setDirectionMode(DEVICE_GPIO_PIN_LED1, GPIO_DIR_MODE_OUT);
+
+    //GPIO_13 for stepper
+    GPIO_setPadConfig(13U, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setPadConfig(13U, GPIO_PIN_TYPE_STD);
+    GPIO_setPinConfig(GPIO_13_GPIO13);
+    GPIO_setDirectionMode(13U, GPIO_DIR_MODE_OUT);
+
+    //GPIO_56 for stepper
+    GPIO_setPadConfig(40U, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setPadConfig(40U, GPIO_PIN_TYPE_STD);
+    GPIO_setPinConfig(GPIO_40_GPIO40);
+    GPIO_setDirectionMode(40U, GPIO_DIR_MODE_OUT);
 
     //GPIO_56 for stepper
     GPIO_setPadConfig(56U, GPIO_PIN_TYPE_PULLUP);
@@ -309,7 +306,7 @@ void PinMux_setup_GPIO(void) {
     GPIO_setPinConfig(GPIO_56_GPIO56);
     GPIO_setDirectionMode(56U, GPIO_DIR_MODE_OUT);
 
-    //GPIO_22 for stepper
+    //GPIO 22 for stepper
     GPIO_setPadConfig(22U, GPIO_PIN_TYPE_PULLUP);
     GPIO_setPadConfig(22U, GPIO_PIN_TYPE_STD);
     GPIO_setPinConfig(GPIO_22_GPIO22);
