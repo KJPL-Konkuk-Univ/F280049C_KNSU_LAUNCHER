@@ -43,6 +43,8 @@ uint16_t cmd[16];
 // Function Prototypes
 void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed);
 void I2C_init();
+void ctrlStepper(uint16_t*);
+
 //uint16_t* parseGPS(char* nmea);
 
 //for setup
@@ -209,18 +211,17 @@ void main(void)
     for(;;) {
         //sendDataSCI(SCIA_BASE, sData, SCI_FIFO_TX16);
         //DEVICE_DELAY_US(500000);
-        GPIO_writePin(22U, 0);
-        GPIO_writePin(13U, 0);
-        GPIO_controlStepper(56U, 360*10, 500);
-        GPIO_controlStepper(40U, 360*10, 500);
-        GPIO_writePin(22U, 1);
-        GPIO_writePin(40U, 0);
-        GPIO_controlStepper(56U, 360*10, 500);
-        GPIO_controlStepper(40U, 360*10, 500);
+        //GPIO_writePin(22U, 0);
+        //GPIO_writePin(13U, 1);
+        //GPIO_controlStepper(56U, 180, 100000);
+        //GPIO_controlStepper(40U, 30, 500);
+        //GPIO_writePin(22U, 1);
+        //GPIO_writePin(13U, 0);
+        //GPIO_controlStepper(56U, 360*10, 500);
+        //GPIO_controlStepper(40U, 30, 500);
         //GPIO_controlStepper(22U, 360, 5000);
 //        rcvCmdData(SCIA_BASE, rData, SCI_FIFO_RX16);
 //        parseMsgSCI(rData, cmd);
-        NOP;
     }
 }
 
@@ -284,9 +285,9 @@ __interrupt void sciaRxISR(void) {
         flag = 3;
         NOP;
         break;
-    case 3: //ETC
+    case 3: //STEPPER
         flag = 4;
-        NOP;
+        ctrlStepper(receivedChar);
         break;
     case 4: //no need to parse
         flag = 5;
@@ -301,6 +302,7 @@ __interrupt void sciaRxISR(void) {
     Ack[1] = flag;
     SCI_writeCharArray(SCIA_BASE, (uint16_t*)Ack, sizeof(Ack));
 
+    SCI_clearInterruptStatus(SCIA_BASE, SCI_INT_RXFF);
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP9);
 
     RxReadyFlag = 1;
@@ -339,10 +341,26 @@ void GPIO_controlStepper(uint32_t pin, uint16_t angle, uint32_t speed) {
     uint32_t i;
     for(i = 0; i < (uint32_t)(angle / 1.8) ; i++) { // 1.8 degree per step
         GPIO_writePin(pin, 1);
-        DEVICE_DELAY_US(speed); //speed
+        DEVICE_DELAY_US(500); //speed
         GPIO_writePin(pin, 0);
         DEVICE_DELAY_US(speed); //speed
     }
+}
+
+void ctrlStepper(uint16_t* cmd) {
+    //ID, SEL, DIR, ANGLE, SPEED
+    uint32_t pincfg[2] = { 0, };
+    if(cmd[1] == 1) {
+        pincfg[0] = 13U;
+        pincfg[1] = 40U;
+    }
+    else if(cmd[1] = 2) {
+        pincfg[0] == 56U;
+        pincfg[1] == 22U;
+    }
+
+    GPIO_writePin(pincfg[0], cmd[2]);
+    GPIO_controlStepper(pincfg[1], cmd[3], 500);
 }
 
 void I2C_init() {
