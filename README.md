@@ -1,4 +1,4 @@
-# KJPL - Embedded ![F280049C](https://img.shields.io/badge/-F280049C-CC0000?style=flat-square)
+# KJPL - F280049C_KNSU_LAUNCHER ![F280049C](https://img.shields.io/badge/-F280049C-CC0000?style=flat-square)
 
 ## Target
 - LAUNCHXL-F280049C
